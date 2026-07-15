@@ -9,7 +9,7 @@ from app import create_app, db
 from models import User, Film, WatchlistEntry
 from services.collection_service import FilmNotFoundError
 from services.watchlist_service import (
-    save_to_watchlist,
+    add_to_watchlist,
     get_watchlist,
     AlreadyInWatchlistError,
 )
@@ -49,23 +49,23 @@ def sample_film(app):
         return film.id
 
 
-def test_save_to_watchlist_creates_entry(app, sample_user, sample_film):
-    """Saving a valid film should create a watchlist entry."""
+def test_add_to_watchlist_creates_entry(app, sample_user, sample_film):
+    """Adding a valid film should create a watchlist entry."""
     with app.app_context():
-        entry = save_to_watchlist(sample_user, sample_film)
+        entry = add_to_watchlist(sample_user, sample_film)
 
         assert entry.user_id == sample_user
         assert entry.film_id == sample_film
         assert entry.public is True
 
 
-def test_save_to_watchlist_duplicate_raises(app, sample_user, sample_film):
-    """Saving the same film twice should raise a dedicated error."""
+def test_add_to_watchlist_duplicate_raises(app, sample_user, sample_film):
+    """Adding the same film twice should raise a dedicated error."""
     with app.app_context():
-        save_to_watchlist(sample_user, sample_film)
+        add_to_watchlist(sample_user, sample_film)
 
         with pytest.raises(AlreadyInWatchlistError):
-            save_to_watchlist(sample_user, sample_film)
+            add_to_watchlist(sample_user, sample_film)
 
         count = WatchlistEntry.query.filter_by(
             user_id=sample_user, film_id=sample_film
@@ -73,13 +73,13 @@ def test_save_to_watchlist_duplicate_raises(app, sample_user, sample_film):
         assert count == 1
 
 
-def test_save_to_watchlist_nonexistent_film_raises(app, sample_user):
-    """Saving a film that does not exist should raise FilmNotFoundError."""
+def test_add_to_watchlist_nonexistent_film_raises(app, sample_user):
+    """Adding a film that does not exist should raise FilmNotFoundError."""
     with app.app_context():
         fake_film_id = "00000000-0000-0000-0000-000000000000"
 
         with pytest.raises(FilmNotFoundError):
-            save_to_watchlist(sample_user, fake_film_id)
+            add_to_watchlist(sample_user, fake_film_id)
 
 
 def test_get_watchlist_returns_newest_first(app, sample_user):
